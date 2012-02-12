@@ -32,32 +32,32 @@ echo ----------------------------------------------------------------
 	CD /d "%APPDATA%\Mozilla\Firefox\Profiles\*.default"
 	IF EXIST places.sqlite (
 		ECHO Copying Firefox history from "%APPDATA%\Mozilla\Firefox\Profiles\*.default"
-		COPY "places.sqlite" "%OLDDIR%\files"
+		COPY "places.sqlite" "%OLDDIR%\html"
 	) ELSE (
 		ECHO Firefox history could not be found. See https://support.mozilla.org/en-US/kb/Profiles
 	)
-	cd /d "%OLDDIR%\PHP"
+	cd /d "%OLDDIR%\QuickPHP"
 echo ----------------------------------------------------------------
 	CD /d "%LOCALAPPDATA%\Chromium\User Data\Default"
 	IF EXIST History (
 		ECHO Copying Chromium history from "%LOCALAPPDATA%\Chromium\User Data\Default"
-		COPY "History" "%OLDDIR%\files"
-		COPY "Favicons" "%OLDDIR%\files"
+		COPY "History" "%OLDDIR%\html"
+		COPY "Favicons" "%OLDDIR%\html"
 	) ELSE (
 		ECHO Chromium history could not be found.
 	)
-	cd /d "%OLDDIR%\PHP"
+	cd /d "%OLDDIR%\QuickPHP"
 echo ----------------------------------------------------------------
 
 	CD /d "%LOCALAPPDATA%\Google\Chrome\User Data\Default"
 	IF EXIST History (
 		ECHO Copying Google Chrome history from "%LOCALAPPDATA%\Google\Chrome\User Data\Default"
-		COPY "History" "%OLDDIR%\files"
-		COPY "Favicons" "%OLDDIR%\files"
+		COPY "History" "%OLDDIR%\html"
+		COPY "Favicons" "%OLDDIR%\html"
 	) ELSE (
 		ECHO Google Chrome history could not be found.
 	)
-	cd /d "%OLDDIR%\PHP"
+	cd /d "%OLDDIR%\QuickPHP"
 
 echo ----------------------------------------------------------------
 ) ELSE (
@@ -65,33 +65,33 @@ echo ----------------------------------------------------------------
 	CD /d "%APPDATA%\Mozilla\Firefox\Profiles\*.default"
 	IF EXIST places.sqlite (
 		ECHO Copying Firefox history from "%APPDATA%\Mozilla\Firefox\Profiles\*.default"
-		XCOPY "places.sqlite" "%OLDDIR%\files"
+		XCOPY "places.sqlite" "%OLDDIR%\html"
 	) ELSE (
 		ECHO Firefox history could not be found. See https://support.mozilla.org/en-US/kb/Profiles
 	)
-	cd /d "%OLDDIR%\PHP"
+	cd /d "%OLDDIR%\QuickPHP"
 
 echo ----------------------------------------------------------------
 	CD /d "%USERPROFILE%\Local Settings\Application Data\Chromium\User Data\Default"
 	IF EXIST History (
 		ECHO Copying Chromium history from "%USERPROFILE%\Local Settings\Application Data\Chromium\User Data\Default"
-		XCOPY "History" "%OLDDIR%\files"
-		XCOPY "Favicons" "%OLDDIR%\files"
+		XCOPY "History" "%OLDDIR%\html"
+		XCOPY "Favicons" "%OLDDIR%\html"
 	) ELSE (
 		ECHO Chromium history could not be found.
 	)
-	cd /d "%OLDDIR%\PHP"
+	cd /d "%OLDDIR%\QuickPHP"
 echo ----------------------------------------------------------------
 
 	CD /d "%USERPROFILE%\Local Settings\Application Data\Google\Chrome\User Data\Default"
 	IF EXIST History (
 		ECHO Copying Google Chrome history from "%USERPROFILE%\Local Settings\Application Data\Google\Chrome\User Data\Default"
-		XCOPY "History" "%OLDDIR%\files"
-		XCOPY "Favicons" "%OLDDIR%\files"
+		XCOPY "History" "%OLDDIR%\html"
+		XCOPY "Favicons" "%OLDDIR%\html"
 	) ELSE (
 		ECHO Google Chrome history could not be found.
 	)
-	cd /d "%OLDDIR%\PHP"
+	cd /d "%OLDDIR%\QuickPHP"
 echo ----------------------------------------------------------------
 
 )

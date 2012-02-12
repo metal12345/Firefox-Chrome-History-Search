@@ -1,0 +1,44 @@
+body{ font-family:Arial, Helvetica, sans-serif; background-color:#E8E8E8;}
+*{ margin:1;padding:0; }
+#container { margin: 0 auto; }
+a { color:#DF3D82; text-decoration:none }
+a:hover { color:#DF3D82; text-decoration:underline; }
+ul.update { 
+	list-style:none;
+	font-size:1em; 
+	margin-top:10px;     
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	-o-text-overflow: ellipsis;
+	-moz-binding: url('ellipsis.xml#ellipsis');
+
+}
+ul.update li{ border-bottom:#dedede solid 1px; text-align:left;}
+ul.update li:first-child{ border-top:#dedede solid 1px; text-align:left;  }
+#flash { margin-top:20px; text-align:left; }
+#searchresults { text-align:left; margin-top:20px; display:none; font-family:Arial, Helvetica, sans-serif; font-size:16px; color:#000; }
+.word { font-weight:bold; color:#000000; }
+#search_box { padding:4px; border:solid 1px #666666; width:300px; height:30px; font-size:18px;-moz-border-radius: 6px;-webkit-border-radius: 6px; }
+.search_button { border:#000000 solid 1px; padding: 6px; color:#000; font-weight:bold; font-size:16px;-moz-border-radius: 6px;-webkit-border-radius: 6px; }
+.checkbox {display: inline-block; border:#000000 solid 1px; padding: 6px; color:#000; font-weight:bold; font-size:16px;-moz-border-radius: 6px;-webkit-border-radius: 6px;  text-align:left; background-color:#FFFFFF;}
+
+.whereIt{display: inline-block; padding: 6px;  text-align:left; vertical-align:text-top;}
+.orderIt{display: inline-block; padding: 6px;  text-align:left; vertical-align:text-top;}
+
+.found { font-weight: bold; font-style: italic; color: #ff0000; }
+
+h2 { margin-right: 70px; }
+.visits {font-style: italic; color: #000000; margin-left:5px; display: inline; }
+.typed {font-style: italic; color: #000000; margin-left:5px;display: inline; }
+.hidden {font-style: italic; color: #000000; margin-left:5px;display: inline; }
+.frecency {font-style: italic; color: #000000; margin-left:5px;display: inline; }
+#date{border-style: dotted; font-style: italic; margin-left:2px; margin-right:2px; font-size:12px; color: #000000; display: inline; }
+.info{margin-left:170px;}
+
+.show_hide {
+    display:none;
+}
+
+
+//In ul.update li -->> add height:30px; 
+//#container ->>  width: 900px;
