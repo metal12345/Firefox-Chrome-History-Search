@@ -1,79 +1,79 @@
 <?php   
- /* CAT:Line chart */
- 
-$db = new PDO('sqlite:../places.sqlite');
-$row = $db->prepare("
-SELECT COUNT(*) as num_visits, 
-             strftime ('%Y', visit_date/1000/1000,'unixepoch','localtime') as year,
-             strftime ('%m', visit_date/1000/1000,'unixepoch','localtime') as month,
-             strftime('%d', visit_date/1000/1000, 'unixepoch', 'localtime') as day
-FROM moz_historyvisits v LEFT JOIN moz_places h ON v.place_id = h.id 
-WHERE v.visit_type NOT IN (0, 4) 
-GROUP BY year,month,day ORDER BY year, month, day ASC");
+	/* CAT:Line chart */
+	$db = new PDO('sqlite:../places.sqlite');
+	$row = $db->prepare("
+	SELECT COUNT(*) as num_visits, 
+			 strftime ('%Y', visit_date/1000/1000,'unixepoch','localtime') as year,
+			 strftime ('%m', visit_date/1000/1000,'unixepoch','localtime') as month,
+			 strftime('%d', visit_date/1000/1000, 'unixepoch', 'localtime') as day
+	FROM moz_historyvisits v LEFT JOIN moz_places h ON v.place_id = h.id 
+	WHERE v.visit_type NOT IN (0, 4) 
+	GROUP BY year,month,day ORDER BY year, month, day ASC");
+	$day = array();
+	$month = array();
+	$count = 0;
+	$row->execute();
+	foreach($row as $r) {
+		$day[$count] = $r['num_visits'];
+		$month[$count] = $r['year'] . "." . $r['month'] . "." . $r['day'];
+		$count++;
+	}
 
-//	$day[($r['day'])] = $r['num_visits'];
-$day = array();
-$month = array();
-$count = 0;
-$row->execute();
-foreach($row as $r) {
-	$day[$count] = $r['num_visits'];
-	$month[$count] = $r['year'] . "." . $r['month'] . "." . $r['day'];
-	$count++;
-}
+	/* pChart library inclusions */
+	include("class/pData.class.php");
+	include("class/pDraw.class.php");
+	include("class/pImage.class.php");
 
- /* pChart library inclusions */
- include("class/pData.class.php");
- include("class/pDraw.class.php");
- include("class/pImage.class.php");
+	/* Create and populate the pData object */
+	$MyData = new pData();  
+	$MyData->addPoints($day,"hits");
+	$MyData->setAxisName(0,"Hits");
+	$MyData->addPoints($month,"Labels");
+	$MyData->setSerieDescription("Labels","Months");
+	$MyData->setAbscissa("Labels");
+	$MyData->setAxisDisplay(0,AXIS_FORMAT_METRIC,1);
 
- /* Create and populate the pData object */
- $MyData = new pData();  
- $MyData->addPoints($day,"hits");
+	/* Create the pChart object */
+	$myPicture = new pImage(700,230,$MyData);
 
- $MyData->setAxisName(0,"Hits");
- $MyData->addPoints($month,"Labels");
- $MyData->setSerieDescription("Labels","Months");
- $MyData->setAbscissa("Labels");
- $MyData->setAxisDisplay(0,AXIS_FORMAT_METRIC,1);
+	/* Turn of Antialiasing */
+	$myPicture->Antialias = FALSE;
 
+	/* Add a border to the picture */
+	$myPicture->drawRectangle(0,0,699,229,array("R"=>0,"G"=>0,"B"=>0));
 
- /* Create the pChart object */
- $myPicture = new pImage(700,230,$MyData);
+	/* Write the chart title */ 
+	$myPicture->setFontProperties(array("FontName"=>"fonts/Forgotte.ttf","FontSize"=>11));
+	$myPicture->drawText(150,35,"Daily hits",array("FontSize"=>20,"Align"=>TEXT_ALIGN_BOTTOMMIDDLE));
 
- /* Turn of Antialiasing */
- $myPicture->Antialias = FALSE;
+	/* Set the default font */
+	$myPicture->setFontProperties(array("FontName"=>"fonts/pf_arma_five.ttf","FontSize"=>6));
 
- /* Add a border to the picture */
- $myPicture->drawRectangle(0,0,699,229,array("R"=>0,"G"=>0,"B"=>0));
- 
- /* Write the chart title */ 
- $myPicture->setFontProperties(array("FontName"=>"fonts/Forgotte.ttf","FontSize"=>11));
- $myPicture->drawText(150,35,"Daily hits",array("FontSize"=>20,"Align"=>TEXT_ALIGN_BOTTOMMIDDLE));
+	/* Define the chart area */
+	$myPicture->setGraphArea(33,30,700,210);
 
- /* Set the default font */
- $myPicture->setFontProperties(array("FontName"=>"fonts/pf_arma_five.ttf","FontSize"=>6));
+	/* Draw the scale */
+	if($count>12){
+		$skip = ($count/12);
+	}else{
+		$skip = 0;
+	}
+	$scaleSettings = array("LabelSkip"=>($skip),"XMargin"=>10,"YMargin"=>10,"Floating"=>TRUE,"DrawSubTicks"=>TRUE,"CycleBackground"=>TRUE);
+	$myPicture->drawScale($scaleSettings);
+	//"GridR"=>200,"GridG"=>200,"GridB"=>200
 
- /* Define the chart area */
- $myPicture->setGraphArea(33,30,700,210);
+	/* Turn on Antialiasing */
+	$myPicture->Antialias = TRUE;
 
- /* Draw the scale */
- $scaleSettings = array("LabelSkip"=>($count/12),"XMargin"=>10,"YMargin"=>10,"Floating"=>TRUE,"DrawSubTicks"=>TRUE,"CycleBackground"=>TRUE);
- $myPicture->drawScale($scaleSettings);
- //"GridR"=>200,"GridG"=>200,"GridB"=>200
+	/* Draw the line chart */
+	$myPicture->drawLineChart();
 
- /* Turn on Antialiasing */
- $myPicture->Antialias = TRUE;
+	/* Write the chart legend */
+	$myPicture->drawLegend(540,20,array("Style"=>LEGEND_NOBORDER,"Mode"=>LEGEND_HORIZONTAL));
 
- /* Draw the line chart */
- $myPicture->drawLineChart();
-
- /* Write the chart legend */
- $myPicture->drawLegend(540,20,array("Style"=>LEGEND_NOBORDER,"Mode"=>LEGEND_HORIZONTAL));
-
- /* Render the picture (choose the best way) */
- $myPicture->Render("example5.png");   
-  echo ("<img id='loadingIndicator' src='example5.png' alt='Loading...' />")
+	/* Render the picture (choose the best way) */
+	$myPicture->Render("example5.png");   
+	echo ("<img id='loadingIndicator' src='example5.png' alt='Loading...' />")
  
 ?>
 

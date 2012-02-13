@@ -140,6 +140,67 @@ else{
 		}
 
 		
+		$row = $db->query(" select  pb.url URL, pb.title TITLE, hb.visit_date, hb.visit_type, fb.data favicon
+		from moz_historyvisits ha
+		join moz_historyvisits hb on ha.id = hb.from_visit
+		join moz_places pa on pa.id = ha.place_id
+		join moz_places pb on pb.id = hb.place_id
+		join moz_favicons fb on pb.favicon_id = fb.id 
+		WHERE pa.id = '" . $q . "' ORDER BY TITLE DESC ");
+		$countr = 0 ;
+		foreach($row as $r) {
+				if($countr == 0){$end_result = '<b>Visited</b><br />';$countr++;echo $end_result;}
+
+				if($r['TITLE']==""){
+					$url = "<a href='" . $r['URL'] . "'>" . $r['URL'] . "</a>";	
+				}
+				else{
+					$url = "<a href='" . $r['URL'] . "'>" . $r['TITLE'] . "</a>";	
+				}
+
+				if($r['favicon']==""){
+					$favicon = '<img src="favicon.ico' . '" />';
+				}
+				else{
+					$favicon = '<img src="data:image/x-icon;base64,' . base64_encode( $r['favicon'] ) . '" />';
+				}
+				print( $favicon . $url. "<br />" );
+		}
+		
+		$row = $db->query(" select  pb.url URL, pb.title TITLE, hb.visit_date, hb.visit_type, fb.data favicon
+		from moz_historyvisits ha
+		join moz_historyvisits hb on ha.from_visit = hb.id
+		join moz_places pa on pa.id = ha.place_id
+		join moz_places pb on pb.id = hb.place_id
+		join moz_favicons fb on pb.favicon_id = fb.id 
+		WHERE pa.id = '" . $q . "' ORDER BY TITLE DESC ");
+		$countr = 0 ;
+		foreach($row as $r) {
+				if($countr == 0){$end_result = '<b>From</b><br />';$countr++;echo $end_result;}
+
+				if($r['TITLE']==""){
+					$url = "<a href='" . $r['URL'] . "'>" . $r['URL'] . "</a>";	
+				}
+				else{
+					$url = "<a href='" . $r['URL'] . "'>" . $r['TITLE'] . "</a>";	
+				}
+
+				if($r['favicon']==""){
+					$favicon = '<img src="favicon.ico' . '" />';
+				}
+				else{
+					$favicon = '<img src="data:image/x-icon;base64,' . base64_encode( $r['favicon'] ) . '" />';
+				}
+				print( $favicon . $url. "<br />" );
+		}
+		
+	}
+}
+?>
+
+<?PHP
+/*Storage*/
+/*
 		$row = $db->query("	SELECT distinct
 				moz_places.url TOURL,
 				moz_places.title TOTITLE,
@@ -156,26 +217,5 @@ else{
 				join moz_favicons
 				on moz_places.favicon_id = moz_favicons.id
 			WHERE place2.id = '" . $q . "' ORDER BY TOTITLE DESC");
-			
-		$countr = 0 ;
-		foreach($row as $r) {
-				if($countr == 0){$end_result = '<b>Visited</b><br />';$countr++;echo $end_result;}
-
-				if($r['TOTITLE']==""){
-					$url = "<a href='" . $r['TOURL'] . "'>" . $r['TOURL'] . "</a>";	
-				}
-				else{
-					$url = "<a href='" . $r['TOURL'] . "'>" . $r['TOTITLE'] . "</a>";	
-				}
-
-				if($r['favicon']==""){
-					$favicon = '<img src="favicon.ico' . '" />';
-				}
-				else{
-					$favicon = '<img src="data:image/x-icon;base64,' . base64_encode( $r['favicon'] ) . '" />';
-				}
-				print( $favicon . $url. "<br />" );
-		}
-	}
-}
+*/
 ?>

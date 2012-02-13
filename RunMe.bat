@@ -1,5 +1,5 @@
 ECHO OFF
-echo Close Firefox.
+echo This will copy Firefox/Chrome/Chromium history to this program.
 pause
 
 
@@ -34,7 +34,7 @@ echo ----------------------------------------------------------------
 		ECHO Copying Firefox history from "%APPDATA%\Mozilla\Firefox\Profiles\*.default"
 		COPY "places.sqlite" "%OLDDIR%\html"
 	) ELSE (
-		ECHO Firefox history could not be found. See https://support.mozilla.org/en-US/kb/Profiles
+		ECHO Firefox history could not be found. Places places.sqlite in the "files" directory. See https://support.mozilla.org/en-US/kb/Profiles
 	)
 	cd /d "%OLDDIR%\QuickPHP"
 echo ----------------------------------------------------------------
@@ -67,7 +67,7 @@ echo ----------------------------------------------------------------
 		ECHO Copying Firefox history from "%APPDATA%\Mozilla\Firefox\Profiles\*.default"
 		XCOPY "places.sqlite" "%OLDDIR%\html"
 	) ELSE (
-		ECHO Firefox history could not be found. See https://support.mozilla.org/en-US/kb/Profiles
+		ECHO Firefox history could not be found. Places places.sqlite in the "files" directory. See https://support.mozilla.org/en-US/kb/Profiles
 	)
 	cd /d "%OLDDIR%\QuickPHP"
 
@@ -98,6 +98,6 @@ echo ----------------------------------------------------------------
 
 
 ECHO Launching QuickPHP. Close QuickPHP from the system tray when finished. Ensure port 5723 is not accessable from outside.
-START QUICKPHP.exe /start /startbrowser /minimized
+START QUICKPHP.exe /start /startbrowser /minimized /PHPMaxSecs=0 /NoConfirm=true /ShowTrayIcon=true
 
 pause

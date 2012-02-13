@@ -119,7 +119,7 @@
 					<input type="checkbox" name="chrome" id="chrome" value="0" class='chrome' />
 					<input type="text" name="search" id="search_box" value="" class='search_box'/>
 					<input type="submit" value="Go" class="search_button" /><br />
-					 <a href="#" class="show_hide">Advanced Search / </a><a href="stat" class="">Stats</a><br />
+					 <a href="#" class="show_hide">Advanced Search / </a><a href="stat/index.php" class="">Statistics / </a><a href="mergeit.php" class="">Merge FF Histories </a><br />
 					 
 					<div class="checkbox">
 						<div class="whereIt">
