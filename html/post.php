@@ -1,9 +1,26 @@
 <?php
+//VARIABLES
+$end_result = '';
+$numrows = 0;
+
+$where = array();
+$whereTitle = array();
+$whereURL = array();
+
+//INPUT
+$isTitle = sqlite_escape_string($_POST['isTitle']);
+$isUrl = sqlite_escape_string($_POST['isUrl']);
+$isHidden = sqlite_escape_string($_POST['isHidden']);
+$orderBy = sqlite_escape_string($_POST['orderBy']);
+$limit = sqlite_escape_string($_POST['limit']);
+$word = rtrim(ltrim(sqlite_escape_string($_POST['search'])));
+$word2 = str_getcsv($word, " ", '"');
+
+if($limit ==0){
+	$limit = "";
+}else{$limit = ("LIMIT ".$limit);}
 
 $chrome = sqlite_escape_string($_POST['chrome']);
-#foreach ($_POST as $key => $value ){
-#echo "<br>$key is checked";
-#}
 if ($chrome == "1") {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	if (isset($_POST['search'])) {	
@@ -13,36 +30,45 @@ if ($chrome == "1") {
 		if(file_exists($chromefavicons) && file_exists($chromehistory)){
 			$db = new PDO('sqlite:'.$chromehistory);
 			$db2 = new PDO('sqlite:'.$chromefavicons);
-		}	
-		else{ 
+		}else{ 
 			echo "Make sure ".$chromehistory." and ". $chromefavicons ." are present.<br/>";
 			echo "In Windows7 you can find this at C:\Users\**username**\AppData\Local\Google\Chrome\User Data\Default <br/>";
 			echo "If using Chromium, C:\Users\**username**\AppData\Local\Chromium\User Data\Default <br/>";
 			exit();	
 		}
 	
-		//DB
-
-		//INPUTS
-		$isTitle = sqlite_escape_string($_POST['isTitle']);
-		$isUrl = sqlite_escape_string($_POST['isUrl']);
-		$isHidden = sqlite_escape_string($_POST['isHidden']);
-		$orderBy = sqlite_escape_string($_POST['orderBy']);
-		$word = sqlite_escape_string($_POST['search']);
-		//VARIABLES
-		$end_result = '';
-		$numrows = 0;
-		$checked = array();
 		if($isTitle=="1"){
-			array_push($checked, "urls.title 	LIKE '%" . $word . "%'");
+			foreach($word2 as $value) {
+				if(stringBeginsWith($value,"-")){
+					array_push($whereTitle, "(urls.title not	LIKE '%" . substr($value, 1) . "%')");
+				}
+				else{
+					array_push($whereTitle, "(urls.title 	LIKE '%" . $value . "%')");
+				}
+			}
 		}
 		if($isUrl=="1"){
-			array_push($checked, "urls.url 	LIKE '%" . $word . "%'");
+			foreach($word2 as $value) {
+				if(stringBeginsWith($value,"-")){
+					array_push($whereURL, "(urls.url not	LIKE '%" . substr($value, 1) . "%')");
+				}
+				else{
+					array_push($whereURL, "(urls.url 	LIKE '%" . $value . "%')");
+				}
+			}
 		}
-		if($isHidden=="1"){
-			$isHidden="%";
-		}else{$isHidden="0";}
-		$where = implode(' or ', $checked);
+		
+		if($isTitle==1){
+			$whereTitle = " (" . implode(' and ', $whereTitle) . ") ";
+		}
+		if($isUrl==1){
+		$whereURL = " (" . implode(' and ', $whereURL) . ") ";
+		}
+		$where[0] = $whereURL;
+		$where[1] = $whereTitle;
+		$whereAll = implode(' or ', array_filter($where));
+		echo $whereAll;
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////	
 		//QUERY
 		$row = $db->prepare("
@@ -56,8 +82,8 @@ if ($chrome == "1") {
 			datetime((urls.last_visit_time- 11644473600000000)/ 1000000,'unixepoch') lastvisit
 		FROM urls
 		WHERE urls.hidden like '" . $isHidden . "' 
-			and (" . $where . ") GROUP BY urls.id " .
-		"ORDER BY " . $orderBy ." DESC " );
+			and (" . $whereAll . ") GROUP BY urls.id " .
+		"ORDER BY " . $orderBy ." DESC " . $limit );
 		$row->execute();
 		foreach($row as $r) {
 			$numrows++;
@@ -84,12 +110,22 @@ if ($chrome == "1") {
 			}
 			///////////////X-FAVICONS//////////////////////
 			
-			$bold = '<span class="found">' . $word . '</span>';
+			
+			$url = "<a href='" . $r['url'] . "'>";
+			$displayUrl = $r['url'];
+			$displayTitle = $r['title'];
+			foreach($word2 as $bold){
+				$displayUrl = str_ireplace($bold, ('<span class="found">' . $bold . '</span>'), $displayUrl);
+			}
+			foreach($word2 as $bold){
+				$displayTitle = str_ireplace($bold, ('<span class="found">' . $bold . '</span>'), $displayTitle);
+			}
+			
 			if($r['title']==""){
-			$url = "<a href='" . $r['url'] . "'>" . str_ireplace($word, $bold, $r['url']) . "</a>";	
+				$url = $url . $displayUrl . "</a>";
 			}
 			else{
-			$url = "<a href='" . $r['url'] . "'>" . str_ireplace($word, $bold, $r['title']) . "</a>";	
+				$url = $url . $displayTitle . "</a>";
 			}
 
 
@@ -107,7 +143,7 @@ if ($chrome == "1") {
 				'</li>'.
 			'</div>';
 		}
-		echo "$numrows results returned";
+		echo "$numrows results returned"; 
 		echo $end_result;	
 	}
 
@@ -127,29 +163,42 @@ else{
 			exit();	
 		}
 
-		//INPUT
-		$isTitle = sqlite_escape_string($_POST['isTitle']);
-		$isUrl = sqlite_escape_string($_POST['isUrl']);
-		$isHidden = sqlite_escape_string($_POST['isHidden']);
-		$orderBy = sqlite_escape_string($_POST['orderBy']);
-		$word = sqlite_escape_string($_POST['search']);
-		//VARIABLES
-		$checked = array();
-		$numrows = 0;
-		$end_result = '';
+		
+
+		
+		
 		if($isTitle=="1"){
-			array_push($checked, "moz_places.title 	LIKE '%" . $word . "%'");
+			foreach($word2 as $value) {
+				if(stringBeginsWith($value,"-")){
+					array_push($whereTitle, "(moz_places.title not	LIKE '%" . substr($value, 1) . "%')");
+				}
+				else{
+					array_push($whereTitle, "(moz_places.title 	LIKE '%" . $value . "%')");
+				}
+			}
 		}
 		if($isUrl=="1"){
-			array_push($checked, "moz_places.url 	LIKE '%" . $word . "%'");
+			foreach($word2 as $value) {
+				if(stringBeginsWith($value,"-")){
+					array_push($whereURL, "(moz_places.url not	LIKE '%" . substr($value, 1) . "%')");
+				}
+				else{
+					array_push($whereURL, "(moz_places.url 	LIKE '%" . $value . "%')");
+				}
+			}
 		}
-		if($isHidden=="1"){
-			$isHidden="%";
-		}else{
-			$isHidden="0";
-		}
-		$where = implode(' or ', $checked);
 
+		if($isTitle==1){
+			$whereTitle = " (" . implode(' and ', $whereTitle) . ") ";
+		}
+		if($isUrl==1){
+			$whereURL = " (" . implode(' and ', $whereURL) . ") ";
+		}
+		
+		$where[0] = $whereURL;
+		$where[1] = $whereTitle;
+		$whereAll = implode(' or ', array_filter($where));
+		
 		$row = $db->prepare("
 		SELECT distinct 
 			moz_places.id id,
@@ -164,19 +213,31 @@ else{
 		FROM moz_places 
 		left join moz_favicons on moz_places.favicon_id = moz_favicons.id
 		WHERE moz_places.hidden like '" . $isHidden . 
-		"' and (" . $where . ") GROUP BY moz_places.id " .
-		"ORDER BY " . $orderBy ." DESC " );
+		"' and (" . $whereAll . ") GROUP BY moz_places.id " .
+		"ORDER BY " . $orderBy ." DESC " . $limit );
 		$row->execute();
 		foreach($row as $r) {
 			$numrows++;
-			$bold           = '<span class="found">' . $word . '</span>';
+			
 
+			$url = "<a href='" . $r['url'] . "'>";
+			$displayUrl = $r['url'];
+			$displayTitle = $r['title'];
+			foreach($word2 as $bold){
+				$displayUrl = str_ireplace($bold, ('<span class="found">' . $bold . '</span>'), $displayUrl);
+			}
+			foreach($word2 as $bold){
+				$displayTitle = str_ireplace($bold, ('<span class="found">' . $bold . '</span>'), $displayTitle);
+			}
+			
 			if($r['title']==""){
-			$url = "<a href='" . $r['url'] . "'>" . str_ireplace($word, $bold, $r['url']) . "</a>";	
+				$url = $url . $displayUrl . "</a>";
 			}
 			else{
-			$url = "<a href='" . $r['url'] . "'>" . str_ireplace($word, $bold, $r['title']) . "</a>";	
+				$url = $url . $displayTitle . "</a>";
 			}
+
+			
 
 			if($r['favicon']==""){
 				$favicon = '<img src="favicon.ico' . '" />';
@@ -200,9 +261,58 @@ else{
 				'</li>'.
 			'</div>';
 		}
-		echo "$numrows results returned";
+		echo "$numrows results returned"; 
 		echo $end_result;
 	}
 }
 
+
+if (!function_exists('str_getcsv')) {
+    function str_getcsv($input, $delimiter = ',', $enclosure = '"', $escape = null, $eol = null) {
+        $temp = fopen("php://memory", "rw");
+        fwrite($temp, $input);
+        fseek($temp, 0);
+        $r = fgetcsv($temp, 4096, $delimiter, $enclosure);
+        fclose($temp);
+        return $r;
+    }
+}
+function my_filter($item)
+{
+    //return !empty($item); // Will discard 0, 0.0, '0', '', NULL, array() of FALSE
+    //return !is_null($item); // Will only discard NULL
+    return $item != "" && $item !== NULL; // Discards empty strings and NULL
+}
+function my_join($array)
+{
+    return implode(' or ',array_filter($array,"my_filter"));
+} 
+function stringBeginsWith($haystack, $beginning, $caseInsensitivity = false)
+{
+    if ($caseInsensitivity)
+        return strncasecmp($haystack, $beginning, strlen($beginning)) == 0;
+    else
+        return strncmp($haystack, $beginning, strlen($beginning)) == 0;
+}
+
+function stringEndsWith($haystack, $ending, $caseInsensitivity = false)
+{
+    if ($caseInsensitivity)
+        return strcasecmp(substr($haystack, strlen($haystack) - strlen($ending)), $haystack) == 0;
+    else
+        return strpos($haystack, $ending, strlen($haystack) - strlen($ending)) !== false;
+}
+
+
+
+/* Previous bolding PHP
+			
+	$bold           = '<span class="found">' . $word . '</span>';
+	if($r['title']==""){
+	$url = "<a href='" . $r['url'] . "'>" . str_ireplace($word, $bold, $r['url']) . "</a>";	
+	}
+	else{
+	$url = "<a href='" . $r['url'] . "'>" . str_ireplace($word, $bold, $r['title']) . "</a>";	
+	}
+*/
 ?>

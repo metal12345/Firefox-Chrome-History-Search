@@ -14,6 +14,7 @@
 						$(".checkbox").hide();
 				// Get typed value
 				var searchString    = $("#search_box").val();
+				var limitString    = $("#limit_box").val();
 				
 				if ($('#isTitle:checked').val() !== undefined) {
 					var isTitleString    = $("#isTitle").val();
@@ -24,7 +25,7 @@
 				}else{ var isUrlString = "0";}
 				
 				if ($('#isHidden:checked').val() !== undefined) {
-					var isHiddenString    = "1";
+					var isHiddenString    = "%";
 				}else{ var isHiddenString = "0";}
 				if ($('#chrome:checked').val() !== undefined) {
 					var chromeString    = "1";
@@ -34,7 +35,7 @@
 				$('#btn_get').val(orderBy);
 			
 				// Form queryString
-				var data            = 'search='+ searchString + '&isTitle=' + isTitleString + '&isUrl=' + isUrlString + '&isHidden=' + isHiddenString + '&chrome=' + chromeString + '&orderBy=' + orderBy;
+				var data            = 'search='+ searchString + '&isTitle=' + isTitleString + '&isUrl=' + isUrlString + '&isHidden=' + isHiddenString + '&chrome=' + chromeString + '&orderBy=' + orderBy + '&limit=' + limitString;
 				// If searchString isn't empty
 				if(searchString) {
 					$.ajax({
@@ -137,6 +138,10 @@
 							<br><input type="radio" name="group2" value="visit_count" > Visit Count
 							<br><input type="radio" name="group2" value="typed" > Typed
 							<br><input type="radio" name="group2" value="hidden" > Hidden
+						</div>
+						<div class="limitIt">
+						Result Limit<br />
+						<input type="text" name="limit" id="limit_box" value="2000" class='limit_box'/>
 						</div>
 					</div>
 				</form>
