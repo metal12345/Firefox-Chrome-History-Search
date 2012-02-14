@@ -1,8 +1,14 @@
 Installation
 --------------------------------
-Run RunMe.bat
+Run FirstLaunch.bat
+Run ViewHistory.bat if you want to launch the viewer without overwriting its current history file, 
 Close QuickPHP from the system tray when finished. Ensure port 5723 is firewalled and not forwarded.
-If the batch cannot find Firefox/Chrome/Chromium history then put places.sqlite in ./html for Firefox. Put History and Favicons files in ./html for Chrome/Chromium. To find Firefox history files see https://support.mozilla.org/en-US/kb/Profiles. To find Chrome history files see ***********.
+
+
+	IF FirstLaunch.bat can't find history
+	--------------------------------
+	Firefox: Put places.sqlite in ./html To find Firefox history files see https://support.mozilla.org/en-US/kb/Profiles.
+	Chrome/Chromium: Put History and Favicons files in ./html To find Chrome history files see http://***********.
 
 
 Paranoid Installation
@@ -21,6 +27,17 @@ Paranoid Installation
 	Linux
 	-----------------------------
 	Get a webserver and use the contents of ./html 
+	
+	
+	
+Preventing Firefox History Deletion
+----------------------------------
+Firefox clears large portions of its database every so often.
+To prevent this, go to the URL "about:config" in Firefox and create these settings if they don't already exist.
+browser.history_expire_days = 9999999 
+browser.history_expire_days_min = 9999999
+browser.history_expire_sites = 9999999 
+
 
 Credits
 ---------------------------------

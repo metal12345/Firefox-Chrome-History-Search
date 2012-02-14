@@ -1,5 +1,6 @@
-ECHO OFF
-echo This will copy Firefox/Chrome/Chromium history to this program.
+@ ECHO OFF
+echo Warning, this will overwrite the program's current history files
+echo with the latest history from your browser.
 pause
 
 
