@@ -1,32 +1,31 @@
 <?php
-//VARIABLES
-$end_result = '';
-$numrows = 0;
+	//VARIABLES
+	$firefox = "places.sqlite";
+	$chromefavicons = "Favicons";
+	$chromehistory = "History";
+	//INITILIZE
+	$end_result = '';
+	$numrows = 0;
+	$whereTitle = array();
+	$whereURL = array();
+	$whereORURL = array();
+	$whereORTitle = array();
+	$tempArray = array();
+	//INPUT
+	$isTitle = sqlite_escape_string($_POST['isTitle']);
+	$isUrl = sqlite_escape_string($_POST['isUrl']);
+	$isHidden = sqlite_escape_string($_POST['isHidden']);
+	$orderBy = sqlite_escape_string($_POST['orderBy']);
+	$limit = sqlite_escape_string($_POST['limit']);
+	$searchArray = str_getcsv(rtrim(ltrim(sqlite_escape_string($_POST['search']))), " ", '"');
+	if($limit ==0){
+		$limit = "";
+	}else{$limit = ("LIMIT ".$limit);}
+	$chrome = sqlite_escape_string($_POST['chrome']);
 
-$where = array();
-$whereTitle = array();
-$whereURL = array();
 
-//INPUT
-$isTitle = sqlite_escape_string($_POST['isTitle']);
-$isUrl = sqlite_escape_string($_POST['isUrl']);
-$isHidden = sqlite_escape_string($_POST['isHidden']);
-$orderBy = sqlite_escape_string($_POST['orderBy']);
-$limit = sqlite_escape_string($_POST['limit']);
-$word = rtrim(ltrim(sqlite_escape_string($_POST['search'])));
-$word2 = str_getcsv($word, " ", '"');
-
-if($limit ==0){
-	$limit = "";
-}else{$limit = ("LIMIT ".$limit);}
-
-$chrome = sqlite_escape_string($_POST['chrome']);
-if ($chrome == "1") {
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	if (isset($_POST['search'])) {	
-		$chromefavicons = "Favicons";
-		$chromehistory = "History";
-	
+	if ($chrome == "1") {
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		if(file_exists($chromefavicons) && file_exists($chromehistory)){
 			$db = new PDO('sqlite:'.$chromehistory);
 			$db2 = new PDO('sqlite:'.$chromefavicons);
@@ -36,40 +35,75 @@ if ($chrome == "1") {
 			echo "If using Chromium, C:\Users\**username**\AppData\Local\Chromium\User Data\Default <br/>";
 			exit();	
 		}
-	
+
+		$temp = 0;
 		if($isTitle=="1"){
-			foreach($word2 as $value) {
-				if(stringBeginsWith($value,"-")){
-					array_push($whereTitle, "(urls.title not	LIKE '%" . substr($value, 1) . "%')");
+			foreach($searchArray as $value) {
+				if($value == "OR"){
+					$temp = 1;continue;
 				}
-				else{
-					array_push($whereTitle, "(urls.title 	LIKE '%" . $value . "%')");
-				}
+				//If term isn't preceded by OR, push to where array.
+				if($temp == 0){
+					//Exclude term if preceded by "-"
+					if(stringBeginsWith($value,"-")){
+						array_push($whereTitle, "(urls.title not LIKE '%" . substr($value, 1) . "%')");
+					}else{
+						array_push($whereTitle, "(urls.title LIKE '%" . $value . "%')");
+					}	
+				//Else push to whereOR array
+				}else{
+					//Exclude term if preceded by "-"
+					if(stringBeginsWith($value,"-")){
+						array_push($whereORTitle, "(urls.title not	LIKE '%" . substr($value, 1) . "%')");
+					}else{
+						array_push($whereORTitle, "(urls.title 	LIKE '%" . $value . "%')");
+					}	
+					$temp = 0;
+				}		
 			}
-		}
-		if($isUrl=="1"){
-			foreach($word2 as $value) {
-				if(stringBeginsWith($value,"-")){
-					array_push($whereURL, "(urls.url not	LIKE '%" . substr($value, 1) . "%')");
-				}
-				else{
-					array_push($whereURL, "(urls.url 	LIKE '%" . $value . "%')");
-				}
-			}
+			$whereTitle = " (" . implode(' and ', $whereTitle) . ") ";
+			$whereORTitle = " (" . implode(' or ', $whereORTitle) . ") ";
+			$tempArray[0] = $whereTitle; $tempArray[1] = $whereORTitle;
+			$whereTitle = " (" . my_join($tempArray) . ") ";
 		}
 		
-		if($isTitle==1){
-			$whereTitle = " (" . implode(' and ', $whereTitle) . ") ";
+		$temp = 0;
+		if($isUrl=="1"){
+			foreach($searchArray as $value) {
+				if($value == "OR"){
+					$temp = 1;continue;
+				}
+				//If term isn't preceded by OR, push to where array.
+				if($temp == 0){
+					//Exclude term if preceded by "-"
+					if(stringBeginsWith($value,"-")){
+						array_push($whereURL, "(urls.url not	LIKE '%" . substr($value, 1) . "%')");
+					}else{
+						array_push($whereURL, "(urls.url 	LIKE '%" . $value . "%')");
+					}	
+				//Else push to whereOR array
+				}else{
+					//Exclude term if preceded by "-"
+					if(stringBeginsWith($value,"-")){
+						array_push($whereORURL, "(urls.url not	LIKE '%" . substr($value, 1) . "%')");
+					}else{
+						array_push($whereORURL, "(urls.url 	LIKE '%" . $value . "%')");
+					}	
+					$temp = 0;
+				}		
+			}
+			$whereURL = " (" . implode(' and ', $whereURL) . ") ";
+			$whereORURL = " (" . implode(' or ', $whereORURL) . ") ";
+			$tempArray[0] = $whereURL; $tempArray[1] = $whereORURL;
+			$whereURL = " (" . my_join($tempArray) . ") ";
 		}
-		if($isUrl==1){
-		$whereURL = " (" . implode(' and ', $whereURL) . ") ";
-		}
-		$where[0] = $whereURL;
-		$where[1] = $whereTitle;
-		$whereAll = implode(' or ', array_filter($where));
-		echo $whereAll;
+		
+		
+		$tempArray[0] = $whereURL;
+		$tempArray[1] = $whereTitle;
+		$whereAll = implode(' or ', array_filter($tempArray));
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////	
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////	
 		//QUERY
 		$row = $db->prepare("
 		SELECT distinct 
@@ -114,10 +148,12 @@ if ($chrome == "1") {
 			$url = "<a href='" . $r['url'] . "'>";
 			$displayUrl = $r['url'];
 			$displayTitle = $r['title'];
-			foreach($word2 as $bold){
+			foreach($searchArray as $bold){
+				if($value == "OR"){continue;}
 				$displayUrl = str_ireplace($bold, ('<span class="found">' . $bold . '</span>'), $displayUrl);
 			}
-			foreach($word2 as $bold){
+			foreach($searchArray as $bold){
+				if($value == "OR"){continue;}
 				$displayTitle = str_ireplace($bold, ('<span class="found">' . $bold . '</span>'), $displayTitle);
 			}
 			
@@ -145,13 +181,10 @@ if ($chrome == "1") {
 		}
 		echo "$numrows results returned"; 
 		echo $end_result;	
-	}
 
-}
-else{
-	if (isset($_POST['search'])) {
+	}
+	else{
 	
-		$firefox = "places.sqlite";
 		//DB
 		if(file_exists($firefox)){
 			$db = new PDO('sqlite:'.$firefox);
@@ -162,42 +195,75 @@ else{
 			echo "If using Firefox Portable, FirefoxPortable\Data\profile\places.sqlite <br/>";
 			exit();	
 		}
-
-		
-
 		
 		
+		$temp = 0;
 		if($isTitle=="1"){
-			foreach($word2 as $value) {
-				if(stringBeginsWith($value,"-")){
-					array_push($whereTitle, "(moz_places.title not	LIKE '%" . substr($value, 1) . "%')");
+			foreach($searchArray as $value) {
+				if($value == "OR"){
+					$temp = 1;continue;
 				}
-				else{
-					array_push($whereTitle, "(moz_places.title 	LIKE '%" . $value . "%')");
-				}
+				//If term isn't preceded by OR, push to where array.
+				if($temp == 0){
+					//Exclude term if preceded by "-"
+					if(stringBeginsWith($value,"-")){
+						array_push($whereTitle, "(moz_places.title not LIKE '%" . substr($value, 1) . "%')");
+					}else{
+						array_push($whereTitle, "(moz_places.title LIKE '%" . $value . "%')");
+					}	
+				//Else push to whereOR array
+				}else{
+					//Exclude term if preceded by "-"
+					if(stringBeginsWith($value,"-")){
+						array_push($whereORTitle, "(moz_places.title not	LIKE '%" . substr($value, 1) . "%')");
+					}else{
+						array_push($whereORTitle, "(moz_places.title 	LIKE '%" . $value . "%')");
+					}	
+					$temp = 0;
+				}		
 			}
-		}
-		if($isUrl=="1"){
-			foreach($word2 as $value) {
-				if(stringBeginsWith($value,"-")){
-					array_push($whereURL, "(moz_places.url not	LIKE '%" . substr($value, 1) . "%')");
-				}
-				else{
-					array_push($whereURL, "(moz_places.url 	LIKE '%" . $value . "%')");
-				}
-			}
-		}
-
-		if($isTitle==1){
 			$whereTitle = " (" . implode(' and ', $whereTitle) . ") ";
-		}
-		if($isUrl==1){
-			$whereURL = " (" . implode(' and ', $whereURL) . ") ";
+			$whereORTitle = " (" . implode(' or ', $whereORTitle) . ") ";
+			$tempArray[0] = $whereTitle; $tempArray[1] = $whereORTitle;
+			$whereTitle = " (" . my_join($tempArray) . ") ";
 		}
 		
-		$where[0] = $whereURL;
-		$where[1] = $whereTitle;
-		$whereAll = implode(' or ', array_filter($where));
+		$temp = 0;
+		if($isUrl=="1"){
+			foreach($searchArray as $value) {
+				if($value == "OR"){
+					$temp = 1;continue;
+				}
+				//If term isn't preceded by OR, push to where array.
+				if($temp == 0){
+					//Exclude term if preceded by "-"
+					if(stringBeginsWith($value,"-")){
+						array_push($whereURL, "(moz_places.url not	LIKE '%" . substr($value, 1) . "%')");
+					}else{
+						array_push($whereURL, "(moz_places.url 	LIKE '%" . $value . "%')");
+					}	
+				//Else push to whereOR array
+				}else{
+					//Exclude term if preceded by "-"
+					if(stringBeginsWith($value,"-")){
+						array_push($whereORURL, "(moz_places.url not	LIKE '%" . substr($value, 1) . "%')");
+					}else{
+						array_push($whereORURL, "(moz_places.url 	LIKE '%" . $value . "%')");
+					}	
+					$temp = 0;
+				}		
+			}
+			$whereURL = " (" . implode(' and ', $whereURL) . ") ";
+			$whereORURL = " (" . implode(' or ', $whereORURL) . ") ";
+			$tempArray[0] = $whereURL; $tempArray[1] = $whereORURL;
+			$whereURL = " (" . my_join($tempArray) . ") ";
+		}
+		
+		
+		$tempArray[0] = $whereURL;
+		$tempArray[1] = $whereTitle;
+		$whereAll = implode(' or ', array_filter($tempArray));
+		
 		
 		$row = $db->prepare("
 		SELECT distinct 
@@ -223,10 +289,12 @@ else{
 			$url = "<a href='" . $r['url'] . "'>";
 			$displayUrl = $r['url'];
 			$displayTitle = $r['title'];
-			foreach($word2 as $bold){
+			foreach($searchArray as $bold){
+				if($value == "OR"){continue;}
 				$displayUrl = str_ireplace($bold, ('<span class="found">' . $bold . '</span>'), $displayUrl);
 			}
-			foreach($word2 as $bold){
+			foreach($searchArray as $bold){
+				if($value == "OR"){continue;}
 				$displayTitle = str_ireplace($bold, ('<span class="found">' . $bold . '</span>'), $displayTitle);
 			}
 			
@@ -264,55 +332,43 @@ else{
 		echo "$numrows results returned"; 
 		echo $end_result;
 	}
-}
 
 
-if (!function_exists('str_getcsv')) {
-    function str_getcsv($input, $delimiter = ',', $enclosure = '"', $escape = null, $eol = null) {
-        $temp = fopen("php://memory", "rw");
-        fwrite($temp, $input);
-        fseek($temp, 0);
-        $r = fgetcsv($temp, 4096, $delimiter, $enclosure);
-        fclose($temp);
-        return $r;
-    }
-}
-function my_filter($item)
-{
-    //return !empty($item); // Will discard 0, 0.0, '0', '', NULL, array() of FALSE
-    //return !is_null($item); // Will only discard NULL
-    return $item != "" && $item !== NULL; // Discards empty strings and NULL
-}
-function my_join($array)
-{
-    return implode(' or ',array_filter($array,"my_filter"));
-} 
-function stringBeginsWith($haystack, $beginning, $caseInsensitivity = false)
-{
-    if ($caseInsensitivity)
-        return strncasecmp($haystack, $beginning, strlen($beginning)) == 0;
-    else
-        return strncmp($haystack, $beginning, strlen($beginning)) == 0;
-}
-
-function stringEndsWith($haystack, $ending, $caseInsensitivity = false)
-{
-    if ($caseInsensitivity)
-        return strcasecmp(substr($haystack, strlen($haystack) - strlen($ending)), $haystack) == 0;
-    else
-        return strpos($haystack, $ending, strlen($haystack) - strlen($ending)) !== false;
-}
-
-
-
-/* Previous bolding PHP
-			
-	$bold           = '<span class="found">' . $word . '</span>';
-	if($r['title']==""){
-	$url = "<a href='" . $r['url'] . "'>" . str_ireplace($word, $bold, $r['url']) . "</a>";	
+	if (!function_exists('str_getcsv')) {
+		function str_getcsv($input, $delimiter = ',', $enclosure = '"', $escape = null, $eol = null) {
+			$temp = fopen("php://memory", "rw");
+			fwrite($temp, $input);
+			fseek($temp, 0);
+			$r = fgetcsv($temp, 4096, $delimiter, $enclosure);
+			fclose($temp);
+			return $r;
+		}
 	}
-	else{
-	$url = "<a href='" . $r['url'] . "'>" . str_ireplace($word, $bold, $r['title']) . "</a>";	
+
+	function my_filter($item)
+	{
+		//return !empty($item); // Will discard 0, 0.0, '0', '', NULL, array() of FALSE
+		//return !is_null($item); // Will only discard NULL
+		return $item != "" && $item !== NULL && $item !== " () " && $item !== "()"; // Discards empty strings and NULL
 	}
-*/
+	function my_join($array)
+	{
+		return implode(' and ',array_filter($array,"my_filter"));
+	} 
+
+	function stringBeginsWith($haystack, $beginning, $caseInsensitivity = false)
+	{
+		if ($caseInsensitivity)
+			return strncasecmp($haystack, $beginning, strlen($beginning)) == 0;
+		else
+			return strncmp($haystack, $beginning, strlen($beginning)) == 0;
+	}
+
+	function stringEndsWith($haystack, $ending, $caseInsensitivity = false)
+	{
+		if ($caseInsensitivity)
+			return strcasecmp(substr($haystack, strlen($haystack) - strlen($ending)), $haystack) == 0;
+		else
+			return strpos($haystack, $ending, strlen($haystack) - strlen($ending)) !== false;
+	}
 ?>

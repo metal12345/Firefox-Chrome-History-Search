@@ -20,7 +20,9 @@ ul.update li:first-child{ border-top:#dedede solid 1px; text-align:left;  }
 .word { font-weight:bold; color:#000000; }
 #search_box { padding:4px; border:solid 1px #666666; width:300px; height:30px; font-size:18px;-moz-border-radius: 6px;-webkit-border-radius: 6px; }
 .search_button { border:#000000 solid 1px; padding: 6px; color:#000; font-weight:bold; font-size:16px;-moz-border-radius: 6px;-webkit-border-radius: 6px; }
-.checkbox {display: inline-block; border:#000000 solid 1px; padding: 6px; color:#000; font-weight:bold; font-size:16px;-moz-border-radius: 6px;-webkit-border-radius: 6px;  text-align:left; background-color:#FFFFFF;}
+.checkbox{display: inline-block; border:#000000 solid 1px; padding: 6px; color:#000; font-weight:bold; font-size:16px;-moz-border-radius: 6px;-webkit-border-radius: 6px;  text-align:left; background-color:#FFFFFF;}
+.syntax{display: inline-block; border:#000000 solid 1px; padding: 6px; color:#000; font-weight:bold; font-size:16px;-moz-border-radius: 6px;-webkit-border-radius: 6px;  text-align:left; background-color:#FFFFFF;}
+.advanced{display: inline-block; border:#000000 solid 1px; padding: 6px; color:#000; font-weight:bold; font-size:16px;-moz-border-radius: 6px;-webkit-border-radius: 6px;  text-align:left; background-color:#FFFFFF;}
 
 .whereIt{display: inline-block; padding: 6px;  text-align:left; vertical-align:text-top;}
 .orderIt{display: inline-block; padding: 6px;  text-align:left; vertical-align:text-top;}

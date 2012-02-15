@@ -11,7 +11,7 @@
 		<script type="text/javascript">
 		$(function() {
 			$(".search_button").click(function() {
-						$(".checkbox").hide();
+						$(".advanced").hide();
 				// Get typed value
 				var searchString    = $("#search_box").val();
 				var limitString    = $("#limit_box").val();
@@ -100,11 +100,21 @@
 		</script>  
 		<script>
 		$(document).ready(function(){
-			$(".checkbox").hide();
-			$(".show_hide").show();
+			$(".advanced").hide();
+			$(".show_advanced").show();
 	
-			$('.show_hide').click(function(){
-				$(".checkbox").slideToggle();
+			$('.show_advanced').click(function(){
+				$(".advanced").slideToggle();
+			});	
+		});
+		</script>
+		<script>
+		$(document).ready(function(){
+			$(".syntax").hide();
+			$(".show_syntax").show();
+	
+			$('.show_syntax').click(function(){
+				$(".syntax").slideToggle();
 			});	
 		});
 		</script>
@@ -114,20 +124,34 @@
 	<body>
 		<div class="container">
 			<div style="margin:20px auto; text-align: center; ">
-			
 				<form method="post" action="post.php">
 					Chrome
-					<input type="checkbox" name="chrome" id="chrome" value="0" class='chrome' />
+					<input type="checkbox" name="chrome" id="chrome" value="0" class='chrome' /> <br />
 					<input type="text" name="search" id="search_box" value="" class='search_box'/>
 					<input type="submit" value="Go" class="search_button" /><br />
-					 <a href="#" class="show_hide">Advanced Search / </a><a href="stat/index.php" class="">Statistics / </a><a href="mergeit.php" class="">Merge FF Histories </a><br />
+					<a href="#" class="show_advanced">Advanced Search</a> / <a href="stat/index.php" class="">Statistics</a> / <a href="mergeit.php" class="">Merge FF Histories</a> / <a href="#" class="show_syntax">Syntax</a><br />
 					 
-					<div class="checkbox">
+					<div class="syntax">
+						Use a "%" sign to indicate wildcard. <br />
+						...............Ex: peanut%butter<br /><br />
+						Put quotes around phrases. <br />
+						...............Ex: "Google Search"<br /><br />
+						Preceding a word/phrase with OR means the results must include at least one OR term. <br />
+						...............Ex: OR "Google Search" OR "Yahoo Search"<br /><br />
+						Put a "-" sign before a word to exclude it. <br />
+						...............Ex: DuckDuckGo -Google<br /><br />
+						Any word/phrase not preceded by OR must be in the results. <br /><br />
+						To exclude a phrase put a "-" at the beginning of the phrase within it's quotes.<br />
+						...............Ex: DuckDuckGo "-Google Search"<br />
+						...............Ex: Scroogle -Google -Yahoo<br />
+					</div>
+					 
+					<div class="advanced">
 						<div class="whereIt">
 						Search in:
-						<br><input type="checkbox" name="isTitle" id="isTitle" value="1" class='checkbox' checked />Title
-						<br><input type="checkbox" name="isUrl" id="isUrl" value="1" class='checkbox' />URL
-						<br><input type="checkbox" name="isHidden" id="isHidden" value="1" class='checkbox' />Hidden
+						<br><input type="checkbox" name="isTitle" id="isTitle" value="1" class='' checked />Title
+						<br><input type="checkbox" name="isUrl" id="isUrl" value="1" class='' />URL
+						<br><input type="checkbox" name="isHidden" id="isHidden" value="1" class='' />Hidden
 						</div>
 						<div class="orderIt">
 							Order by:
@@ -144,6 +168,7 @@
 						<input type="text" name="limit" id="limit_box" value="2000" class='limit_box'/>
 						</div>
 					</div>
+
 				</form>
 			</div>
 			<div>
