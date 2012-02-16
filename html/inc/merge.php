@@ -1,6 +1,6 @@
 <?php
-$db1 = $_POST['db1'];
-$db2 = $_POST['db2'];
+$db1 = '../'.$_POST['db1'];
+$db2 = '../'.$_POST['db2'];
 error_reporting(0);
  try
  {

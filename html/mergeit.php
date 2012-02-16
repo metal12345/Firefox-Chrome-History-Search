@@ -1,4 +1,4 @@
-<form method="post" action="merge.php">
+<form method="post" action="inc/merge.php">
 	<b>WORK IN PROGRESS - This may corrupt your places.sqlite</b> <br />
 	Known Problems: <br />
 	Only handles history, not bookmarks/inputhistory/annos <br />

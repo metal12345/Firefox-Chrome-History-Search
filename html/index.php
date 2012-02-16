@@ -5,7 +5,7 @@
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 		<title>Firefox Search - History</title>
-		<link rel="stylesheet" type="text/css" href="my.css">
+		<link rel="stylesheet" type="text/css" href="inc/style.css">
 
 		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.0/jquery.min.js"></script> 
 		<script type="text/javascript">
@@ -27,26 +27,31 @@
 				if ($('#isHidden:checked').val() !== undefined) {
 					var isHiddenString    = "%";
 				}else{ var isHiddenString = "0";}
+				
 				if ($('#chrome:checked').val() !== undefined) {
 					var chromeString    = "1";
 				}else{ var chromeString = "0";}
+				
+				if ($('#isCSV:checked').val() !== undefined) {
+					var isCSVString    = "1";
+				}else{ var isCSVString = "0";}
 
 				var orderBy = $("input[name='group2']:checked").val();
 				$('#btn_get').val(orderBy);
 			
 				// Form queryString
-				var data            = 'search='+ searchString + '&isTitle=' + isTitleString + '&isUrl=' + isUrlString + '&isHidden=' + isHiddenString + '&chrome=' + chromeString + '&orderBy=' + orderBy + '&limit=' + limitString;
+				var data            = 'search='+ searchString + '&isTitle=' + isTitleString + '&isUrl=' + isUrlString + '&isHidden=' + isHiddenString + '&chrome=' + chromeString + '&orderBy=' + orderBy + '&limit=' + limitString + '&isCSV=' + isCSVString;
 				// If searchString isn't empty
 				if(searchString) {
 					$.ajax({
 						type: "POST",
-						url: "post.php",
+						url: "inc/post.php",
 						data: data,
 						beforeSend: function(html) { // happens before the call
 							$("#results").html('');
 							$("#searchresults").show();
 							$(".word").html(searchString);
-							$('.container').append('<div class="wait"><img id="loadingIndicator" src="loader.gif" alt="Loading..." /></div>');
+							$('.container').append('<div class="wait"><img id="loadingIndicator" src="img/loader.gif" alt="Loading..." /></div>');
 					   },
 					   success: function(html){ // happens after getting results
 							$("#results").show();
@@ -75,16 +80,16 @@
 			
 			if (str==""){
 			  document.getElementById("txtHint").innerHTML="";
-			  document.getElementById('info'+str).innerHTML='<div class="wait"><img id="loadingIndicator" src="infoloader.gif" alt="Loading..." /></div>';
+			  document.getElementById('info'+str).innerHTML='<div class="wait"><img id="loadingIndicator" src="img/infoloader.gif" alt="Loading..." /></div>';
 			  return;
 			}
 			if (window.XMLHttpRequest){//IE7+, Firefox, Chrome, Opera, Safari
 			  xmlhttp=new XMLHttpRequest();
-			  document.getElementById('info'+str).innerHTML='<div class="wait"><img id="loadingIndicator" src="infoloader.gif" alt="Loading..." /></div>';
+			  document.getElementById('info'+str).innerHTML='<div class="wait"><img id="loadingIndicator" src="img/infoloader.gif" alt="Loading..." /></div>';
 			}
 			else{// IE6, IE5
 			  xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
-			  document.getElementById('info'+str).innerHTML='<div class="wait"><img id="loadingIndicator" src="infoloader.gif" alt="Loading..." /></div>';
+			  document.getElementById('info'+str).innerHTML='<div class="wait"><img id="loadingIndicator" src="img/infoloader.gif" alt="Loading..." /></div>';
 			}
 			xmlhttp.onreadystatechange=function(){
 			  if (xmlhttp.readyState==4 && xmlhttp.status==200){
@@ -92,7 +97,7 @@
 				
 				}
 			}
-			xmlhttp.open("GET","more_info.php?q="+str+'&chrome='+chromeString,true);
+			xmlhttp.open("GET","inc/more_info.php?q="+str+'&chrome='+chromeString,true);
 			xmlhttp.send();
 	
 			
@@ -124,7 +129,7 @@
 	<body>
 		<div class="container">
 			<div style="margin:20px auto; text-align: center; ">
-				<form method="post" action="post.php">
+				<form method="post" action="inc/post.php">
 					Chrome
 					<input type="checkbox" name="chrome" id="chrome" value="0" class='chrome' /> <br />
 					<input type="text" name="search" id="search_box" value="" class='search_box'/>
@@ -164,8 +169,9 @@
 							<br><input type="radio" name="group2" value="hidden" > Hidden
 						</div>
 						<div class="limitIt">
-						Result Limit<br />
-						<input type="text" name="limit" id="limit_box" value="2000" class='limit_box'/>
+							Result Limit<br />
+							<input type="text" name="limit" id="limit_box" value="2000" class='limit_box'/>
+							<br><input type="checkbox" name="isCSV" id="isCSV" value="1" class='' />Export CSV
 						</div>
 					</div>
 
