@@ -1,12 +1,12 @@
 <?php
 $db1 = $_POST['db1'];
 $db2 = $_POST['db2'];
-
+error_reporting(0);
  try
  {
 	//Initilize
 		#PHP execution time limit
-	set_time_limit(12000);
+	set_time_limit(99000);
 		#Database being inserted into
 	$db = new PDO('sqlite:'.$db1);
 		#Database to take from
@@ -50,15 +50,12 @@ $db2 = $_POST['db2'];
 	
 	########For everything in places2.sqlite
 	$resultSelectDB2 = $db2->query('SELECT * FROM moz_places');
-	foreach($resultSelectDB2 as $rowSelectDB2) 
-	{
-		echo "<br /><hr /><br />";
+	foreach($resultSelectDB2 as $rowSelectDB2) {
 		###########compare the title with places.sqlite
 		$resultCountID = $db->query('SELECT count(moz_places.ID) FROM moz_places where moz_places.url = "' . $rowSelectDB2['url'] . '"');
-		foreach($resultCountID as $rowCountID)	
-		{
+		foreach($resultCountID as $rowCountID)	{
 			$countID = $rowCountID['count(moz_places.ID)'];
-			echo "<br />^^count:" . $countID . "row2id:" . $rowSelectDB2['id'] . "^^<br />";
+			echo "<br />^".$rowSelectDB2['id']."^<br />";
 			############if the title doesn't exists in places.sqlite, insert record from sqlite2 where ID = intID++ 
 			if($countID==0){   
 				$intID++;	
@@ -76,23 +73,20 @@ $db2 = $_POST['db2'];
 				$resultAddRecord->bindParam(10, $rowSelectDB2['last_visit_date'], PDO::PARAM_INT);
 				$resultAddRecord->bindParam(11, $uniqueGUID, PDO::PARAM_STR);//GUID - Don't know how firefox gens this so I gen my own with a !fp!fromID prefix.
 				$resultAddRecord->execute();
-				echo "||" . $rowSelectDB2['id'] . " >>> " . $intID . "||<br />";
+				echo "insrt" . $rowSelectDB2['id'];
 				
 				# Search current sqlite2 ID for a favicon
 				$resultFavDB2 = $db2->query('SELECT * FROM moz_favicons where moz_favicons.id = "' . $rowSelectDB2['favicon_id'] . '"');
-				echo ('SELECT * FROM moz_favicons where moz_favicons.id = "' . $rowSelectDB2['favicon_id'] . '"');
 				foreach($resultFavDB2 as $rowFavDB2){
 					# If found 1 favicon...
-					if($db2->query('SELECT * FROM moz_favicons where moz_favicons.id = "' . $rowSelectDB2['favicon_id'] . '"')->fetchColumn() > 0){ echo "found 1 icon <br />";
+					if($db2->query('SELECT * FROM moz_favicons where moz_favicons.id = "' . $rowSelectDB2['favicon_id'] . '"')->fetchColumn() > 0){
+						echo "found icon<br />";
 						#Search sqlite1 for the URL of the found favicon
 						$resultsFoundIcon = $db->query('SELECT count(moz_favicons.id), id FROM moz_favicons where moz_favicons.url = "' . $rowFavDB2['url'] . '"');
-						foreach($resultsFoundIcon as $rowFoundIcon)
-						{
-							# If didn't find the URL of the icon in sqlite1...
-							# Insert the icon into sqlite1
+						foreach($resultsFoundIcon as $rowFoundIcon){
+							# If didn't find the URL of the icon in sqlite1: Insert the icon into sqlite1
 							if($rowFoundIcon['count(moz_favicons.id)']==0){
 								$intFAV++;
-								echo "insert " . parseNull($rowFavDB2['url']) . " to " . $intFAV ;
 								$resultAddIcon = $db->prepare("INSERT INTO moz_favicons VALUES (?,?,?,?,?)");
 								$resultAddIcon->bindParam(1, $intFAV, PDO::PARAM_INT);
 								$resultAddIcon->bindParam(2, $rowFavDB2['url'], PDO::PARAM_STR);
@@ -101,25 +95,23 @@ $db2 = $_POST['db2'];
 								$resultAddIcon->bindParam(5, $rowFavDB2['expiration'], PDO::PARAM_STR);
 								$resultAddIcon->execute();			
 								$db->query("UPDATE moz_places set favicon_id = '" . $intFAV . "' WHERE id = '" . $intID . "'");
-								echo ("We didn't find an icon for newly inserted record ($intID) so we inserted its favicon at ($intFAV)");
+								echo "InsrtIcon";
 							}
 							# If found the URL in sqlite1...
 							# Update moz_places.favicon_id to the proper ID where moz_places.id = $intID
 							else{
 								$db->query("UPDATE moz_places set favicon_id = '" . $rowFoundIcon['id'] . "' WHERE id = '" . $intID . "'");
-								#print("UPDATE moz_places set favicon_id = '" . $rowFoundIcon['id'] . "' WHERE id = '" . $intID . "'" . "<br />");
-								echo ("Look in sqlite2.favicon_id=".$rowSelectDB2['favicon_id']." we find take the URL and find where the favicon URL is in sqlite1 ->>".$rowFavDB2['url']."  so the record we're on ($intID) sets favicon_ID to " . $rowFoundIcon['id']);
 							}//endif
 							
 						}//endfor 
-					}else{echo "<br />didn't find 1 icon <br />";} //endif
+					}else{echo "<br />no icon<br />";} //endif
 				}//endfor	
 			}//endif
 		}//endfor
     }
 
 
-	########################  Untested ############################
+	########################  Needs testing ############################
 	echo "====================Starting HistoryVisits transfer============================";
 	# Select all moz_historyvisits from db2. Join to receive place_id's moz_places.url  and from_visit's moz_place.url
 	$placesResults = $db2->query("
