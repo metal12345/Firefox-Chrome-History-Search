@@ -2,13 +2,13 @@
 	/* CAT:Line chart */
 	$db = new PDO('sqlite:../places.sqlite');
 	$row = $db->prepare("
-	SELECT COUNT(*) as num_visits, 
-			 strftime ('%Y', visit_date/1000/1000,'unixepoch','localtime') as year,
-			 strftime ('%m', visit_date/1000/1000,'unixepoch','localtime') as month,
-			 strftime('%d', visit_date/1000/1000, 'unixepoch', 'localtime') as day
-	FROM moz_historyvisits v LEFT JOIN moz_places h ON v.place_id = h.id 
-	WHERE v.visit_type NOT IN (0, 4) 
-	GROUP BY year,month,day ORDER BY year, month, day ASC");
+		SELECT COUNT(*) as num_visits, 
+				 strftime ('%Y', visit_date/1000/1000,'unixepoch','localtime') as year,
+				 strftime ('%m', visit_date/1000/1000,'unixepoch','localtime') as month,
+				 strftime('%d', visit_date/1000/1000, 'unixepoch', 'localtime') as day
+		FROM moz_historyvisits v LEFT JOIN moz_places h ON v.place_id = h.id 
+		WHERE v.visit_type NOT IN (0, 4) 
+		GROUP BY year,month,day ORDER BY year, month, day ASC");
 	$day = array();
 	$month = array();
 	$count = 0;
@@ -73,7 +73,7 @@
 
 	/* Render the picture (choose the best way) */
 	$myPicture->Render("example5.png");   
-	echo ("<img id='loadingIndicator' src='example5.png' alt='Loading...' />")
+	echo ("<img id='loadingIndicator' src='stat/example5.png' alt='Loading...' />")
  
 ?>
 
@@ -146,7 +146,7 @@ foreach($row as $r) {
  /* Render the picture (choose the best way) */
  $myPicture->Render("example1.png");   
 
-echo ("<img id='loadingIndicator' src='example1.png' alt='Loading...' />")
+echo ("<img id='loadingIndicator' src='stat/example1.png' alt='Loading...' />")
 
 ?>
 
@@ -214,79 +214,73 @@ foreach($row as $r) {
  /* Render the picture (choose the best way) */
  $myPicture->Render("example2.png");   
 
-echo ("<img id='loadingIndicator' src='example2.png' alt='Loading...' />")
- 
+echo ("<img id='loadingIndicator' src='stat/example2.png' alt='Loading...' />")
 
 ?>
 
 <?php
-$db = new PDO('sqlite:../places.sqlite');
+	$db = new PDO('sqlite:../places.sqlite');
 
-$row = $db->prepare("
-SELECT rev_host as rev_host, SUM(visit_count) as visits 
-	  FROM moz_places GROUP BY rev_host 
-	  ORDER BY SUM(visit_count) DESC LIMIT 80");
-$row->execute();
+	$row = $db->prepare("
+		SELECT rev_host as rev_host, SUM(visit_count) as visits 
+		  FROM moz_places GROUP BY rev_host 
+		  ORDER BY SUM(visit_count) DESC LIMIT 80");
+	$row->execute();
 
-$site = array();
-$visits = array();
-foreach($row as $r) {
-	array_push($visits, $r['visits']);
-	array_push($site, strrev($r['rev_host']));
-}
+	$site = array();
+	$visits = array();
+	foreach($row as $r) {
+		array_push($visits, $r['visits']);
+		array_push($site, strrev($r['rev_host']));
+	}
 
 
- /* Create and populate the pData object */
- $MyData = new pData();  
- 
- $MyData->addPoints($visits,"Visits per Site");
- $MyData->setAxisName(0,"Hits");
- $MyData->addPoints($site,"Months");
- $MyData->setSerieDescription("Months");
- $MyData->setAbscissa("Months");
-  $MyData->setAxisDisplay(0,AXIS_FORMAT_METRIC,1);
+	/* Create and populate the pData object */
+	$MyData = new pData();  
 
- /* Create the pChart object */
- $myPicture3 = new pImage(800,700,$MyData); 
+	$MyData->addPoints($visits,"Visits per Site");
+	$MyData->setAxisName(0,"Hits");
+	$MyData->addPoints($site,"Months");
+	$MyData->setSerieDescription("Months");
+	$MyData->setAbscissa("Months");
+	$MyData->setAxisDisplay(0,AXIS_FORMAT_METRIC,1);
 
- 
- 
- /* Turn of Antialiasing */
- $myPicture3->Antialias = FALSE;
+	/* Create the pChart object */
+	$myPicture3 = new pImage(800,700,$MyData); 
 
 
 
- /* Set the default font */
- $myPicture3->setFontProperties(array("FontName"=>"fonts/pf_arma_five.ttf","FontSize"=>7));
+	/* Turn of Antialiasing */
+	$myPicture3->Antialias = FALSE;
 
 
- /* Draw the chart scale */ 
- $myPicture3->setGraphArea(150,30,700,700);
- $myPicture3->drawScale(array("YMargin"=>0,"CycleBackground"=>TRUE,"DrawSubTicks"=>TRUE,"GridR"=>0,"GridG"=>0,"GridB"=>0,"GridAlpha"=>10,"Pos"=>SCALE_POS_TOPBOTTOM)); //  
 
- /* Write the chart legend */
- $myPicture->drawLegend(570,215,array("Style"=>LEGEND_NOBORDER,"Mode"=>LEGEND_HORIZONTAL));
+	/* Set the default font */
+	$myPicture3->setFontProperties(array("FontName"=>"fonts/pf_arma_five.ttf","FontSize"=>7));
 
- /* Turn on shadow computing */ 
- $myPicture3->setShadow(TRUE,array("X"=>1,"Y"=>1,"R"=>0,"G"=>0,"B"=>0,"Alpha"=>10));
 
- /* Draw the chart */
- $myPicture3->setShadow(TRUE,array("X"=>1,"Y"=>1,"R"=>0,"G"=>0,"B"=>0,"Alpha"=>10));
- $settings = array("Gradient"=>TRUE,"GradientMode"=>GRADIENT_EFFECT_CAN,"DisplayPos"=>LABEL_POS_INSIDE,"DisplayValues"=>TRUE,"DisplayR"=>255,"DisplayG"=>255,"DisplayB"=>255,"DisplayShadow"=>TRUE,"Surrounding"=>10);
+	/* Draw the chart scale */ 
+	$myPicture3->setGraphArea(150,30,700,700);
+	$myPicture3->drawScale(array("YMargin"=>0,"CycleBackground"=>TRUE,"DrawSubTicks"=>TRUE,"GridR"=>0,"GridG"=>0,"GridB"=>0,"GridAlpha"=>10,"Pos"=>SCALE_POS_TOPBOTTOM)); //  
 
- 
- 
- 
- $Config = array("DisplayValues"=>1);
- $myPicture3->drawBarChart($Config);
+	/* Write the chart legend */
+	$myPicture->drawLegend(570,215,array("Style"=>LEGEND_NOBORDER,"Mode"=>LEGEND_HORIZONTAL));
 
- 
- /* Render the picture (choose the best way) */
- $myPicture3->Render("example3.png");   
+	/* Turn on shadow computing */ 
+	$myPicture3->setShadow(TRUE,array("X"=>1,"Y"=>1,"R"=>0,"G"=>0,"B"=>0,"Alpha"=>10));
 
-echo ("<img id='loadingIndicator' src='example3.png' alt='Loading...' />")
- 
+	/* Draw the chart */
+	$myPicture3->setShadow(TRUE,array("X"=>1,"Y"=>1,"R"=>0,"G"=>0,"B"=>0,"Alpha"=>10));
+	$settings = array("Gradient"=>TRUE,"GradientMode"=>GRADIENT_EFFECT_CAN,"DisplayPos"=>LABEL_POS_INSIDE,"DisplayValues"=>TRUE,"DisplayR"=>255,"DisplayG"=>255,"DisplayB"=>255,"DisplayShadow"=>TRUE,"Surrounding"=>10);
 
+	$Config = array("DisplayValues"=>1);
+	$myPicture3->drawBarChart($Config);
+
+
+	/* Render the picture (choose the best way) */
+	$myPicture3->Render("example3.png");   
+
+	echo ("<img id='loadingIndicator' src='stat/example3.png' alt='Loading...' />")
 ?>
 
 

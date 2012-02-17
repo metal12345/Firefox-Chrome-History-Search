@@ -1,12 +1,21 @@
 <?php
+	if (!function_exists('str_getcsv')) {
+		function str_getcsv($input, $delimiter = ',', $enclosure = '"', $escape = null, $eol = null) {
+			$temp = fopen("php://memory", "rw");
+			fwrite($temp, $input);
+			fseek($temp, 0);
+			$r = fgetcsv($temp, 4096, $delimiter, $enclosure);
+			fclose($temp);
+			return $r;
+		}
+	}
 
-	function getSyntaxedWhere($column){
+	function getSyntaxedWhere($column, $searchArray){
 		$temp = 0;
 		$whereURL = array();
 		$whereORURL = array();
 		$whereORTitle = array();
 		$tempArray = array();
-		$searchArray = array();
 		foreach($searchArray as $value) {
 			if($value == "OR"){
 				$temp = 1;continue;

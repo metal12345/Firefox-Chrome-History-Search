@@ -1,40 +1,74 @@
 <?php
 include("functions.php");
-	//VARIABLES
+
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+	//USER EDITABLE//
+		//Firefox database name
 	$firefox = '../'."places.sqlite";
+		//Chrome favicons database name
 	$chromefavicons = '../'."Favicons";
+		//Chrome history database name
 	$chromehistory = '../'."History";
+		//Name to export CSV to
 	$csvFileName = rand(1,9999) . Uniqid() . ".csv";
-	//INITILIZE
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+
+	//INITILIZE//
 	$end_result = '';
 	$numrows = 0;
 	$whereTitle = $whereURL = $whereORURL = $whereORTitle = $tempArray = $csv = array();
 	
-	//INPUT
+	//INPUT//
+		//Search string
 	$searchArray = str_getcsv(rtrim(ltrim(sqlite_escape_string($_POST['search']))), " ", '"');
+		//WHERE Title?
 	$isTitle = sqlite_escape_string($_POST['isTitle']);
+		//WHERE URL?
 	$isUrl = sqlite_escape_string($_POST['isUrl']);
+		//WHERE Hidden?
 	$isHidden = sqlite_escape_string($_POST['isHidden']);
+		//Order by?
 	$orderBy = sqlite_escape_string($_POST['orderBy']);
-	
+		//Regex coulm
+	$regexName= sqlite_escape_string($_POST['regexName']);
+		//Regex pattern
+	$regexPattern = sqlite_escape_string($_POST['regexPattern']);
+	if($regexPattern == ""){$regexPattern = "^^";
+	}
+		//Results limit
 	$limit = sqlite_escape_string($_POST['limit']);
 	if($limit==0){
 		$limit = "";
 	}else{$limit = ("LIMIT ".$limit);}
-	
+		//Export to CSV?
 	$isCSV = sqlite_escape_string($_POST['isCSV']);
 	if($isCSV==1){
 		echo '<a href="csv/' . $csvFileName . '">Download CSV</a><br />';
 	}
-	
+		//Chrome or Firefox?
 	$chrome = sqlite_escape_string($_POST['chrome']);
 
-
+	
+	//////////////////
+	//Chrome Results//
+	/////////////////
 	if ($chrome == "1") {
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		if(file_exists($chromefavicons) && file_exists($chromehistory)){
 			$db = new PDO('sqlite:'.$chromehistory);
 			$db2 = new PDO('sqlite:'.$chromefavicons);
+			
+		function regex($string, $pattern) {
+			if(preg_match($pattern, $string)){
+			return 1;
+			}
+			return 0;
+		}
+		$db->sqliteCreateFunction('regex', 'regex', 2);
+
 		}else{ 
 			echo "Make sure ".$chromehistory." and ". $chromefavicons ." are present.<br/>";
 			echo "In Windows7 you can find this at C:\Users\**username**\AppData\Local\Google\Chrome\User Data\Default <br/>";
@@ -42,87 +76,27 @@ include("functions.php");
 			exit();	
 		}
 
-		$temp = 0;
-		if($isTitle=="1"){
-			foreach($searchArray as $value) {
-				if($value == "OR"){
-					$temp = 1;continue;
-				}
-				//If term isn't preceded by OR, push to where array.
-				if($temp == 0){
-					//Exclude term if preceded by "-"
-					if(stringBeginsWith($value,"-")){
-						array_push($whereTitle, "(urls.title not LIKE '%" . substr($value, 1) . "%')");
-					}else{
-						array_push($whereTitle, "(urls.title LIKE '%" . $value . "%')");
-					}	
-				//Else push to whereOR array
-				}else{
-					//Exclude term if preceded by "-"
-					if(stringBeginsWith($value,"-")){
-						array_push($whereORTitle, "(urls.title not	LIKE '%" . substr($value, 1) . "%')");
-					}else{
-						array_push($whereORTitle, "(urls.title 	LIKE '%" . $value . "%')");
-					}	
-					$temp = 0;
-				}		
-			}
-			$whereTitle = " (" . implode(' and ', $whereTitle) . ") ";
-			$whereORTitle = " (" . implode(' or ', $whereORTitle) . ") ";
-			$tempArray[0] = $whereTitle; $tempArray[1] = $whereORTitle;
-			$whereTitle = " (" . my_join($tempArray, " and ") . ") ";
-		}
-		
-		$temp = 0;
-		if($isUrl=="1"){
-			foreach($searchArray as $value) {
-				if($value == "OR"){
-					$temp = 1;continue;
-				}
-				//If term isn't preceded by OR, push to where array.
-				if($temp == 0){
-					//Exclude term if preceded by "-"
-					if(stringBeginsWith($value,"-")){
-						array_push($whereURL, "(urls.url not	LIKE '%" . substr($value, 1) . "%')");
-					}else{
-						array_push($whereURL, "(urls.url 	LIKE '%" . $value . "%')");
-					}	
-				//Else push to whereOR array
-				}else{
-					//Exclude term if preceded by "-"
-					if(stringBeginsWith($value,"-")){
-						array_push($whereORURL, "(urls.url not	LIKE '%" . substr($value, 1) . "%')");
-					}else{
-						array_push($whereORURL, "(urls.url 	LIKE '%" . $value . "%')");
-					}	
-					$temp = 0;
-				}		
-			}
-			$whereURL = " (" . implode(' and ', $whereURL) . ") ";
-			$whereORURL = " (" . implode(' or ', $whereORURL) . ") ";
-			$tempArray[0] = $whereURL; $tempArray[1] = $whereORURL;
-			$whereURL = " (" . my_join($tempArray, " and ") . ") ";
-		}
-		
-		
-		$tempArray[0] = $whereURL;
-		$tempArray[1] = $whereTitle;
+		$tempArray[0] = getSyntaxedWhere("urls.url", $searchArray);
+		$tempArray[1] = getSyntaxedWhere("urls.title", $searchArray);
 		$whereAll = my_join($tempArray, " or ");
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////	
-		//QUERY
+		///////////////////
+		//Chrome Query////
+		//////////////////	
 		$row = $db->prepare("
 		SELECT distinct 
+			
 			urls.id id,
 			urls.url url, 
-			urls.title title, 
+			urls.title title,
 			urls.hidden hidden,
 			urls.visit_count visit_count,
 			urls.typed_count typed,
 			datetime((urls.last_visit_time- 11644473600000000)/ 1000000,'unixepoch') lastvisit
 		FROM urls
-		WHERE urls.hidden like '" . $isHidden . "' 
-			and (" . $whereAll . ") GROUP BY urls.id " .
+		WHERE urls.hidden like '" . $isHidden . "'" .
+			" and REGEX($regexName, '$regexPattern') like '1' " .
+			" and (" . $whereAll . ") GROUP BY urls.id " .
 		"ORDER BY " . $orderBy ." DESC " . $limit );
 		$row->execute();
 		foreach($row as $r) {
@@ -134,11 +108,11 @@ include("functions.php");
 			$displayUrl = $r['url'];
 			$displayTitle = $r['title'];
 			foreach($searchArray as $bold){
-				if($value == "OR"){continue;}
+				if($bold == "OR"){continue;}
 				$displayUrl = str_ireplace($bold, ('<span class="found">' . $bold . '</span>'), $displayUrl);
 			}
 			foreach($searchArray as $bold){
-				if($value == "OR"){continue;}
+				if($bold == "OR"){continue;}
 				$displayTitle = str_ireplace($bold, ('<span class="found">' . $bold . '</span>'), $displayTitle);
 			}
 			
@@ -164,17 +138,17 @@ include("functions.php");
 				'</li>'.
 			'</div>';
 			
-
-	
-			
 			array_push($csv, $favicon . "|split|" . $r['id'] . "|split|" . $r['lastvisit'] . "|split|" . $r['url'] . "|split|" . $r['title'] . "|split|" . $r['visit_count'] . "|split|" . $r['typed'] . "|split|" . $r['hidden']);
 		}
 		echo "$numrows results returned"; 
 		echo $end_result;	
-		echo '<br /><a href="test.csv">Download CSV</a>';
 	}
-	else{
 	
+
+	///////////////////
+	//Firefox Results///
+	//////////////////
+	else{
 		//DB
 		if(file_exists($firefox)){
 			$db = new PDO('sqlite:'.$firefox);
@@ -185,77 +159,22 @@ include("functions.php");
 			echo "If using Firefox Portable, FirefoxPortable\Data\profile\places.sqlite <br/>";
 			exit();	
 		}
-		
-		
-		$temp = 0;
-		if($isTitle=="1"){
-			foreach($searchArray as $value) {
-				if($value == "OR"){
-					$temp = 1;continue;
-				}
-				//If term isn't preceded by OR, push to where array.
-				if($temp == 0){
-					//Exclude term if preceded by "-"
-					if(stringBeginsWith($value,"-")){
-						array_push($whereTitle, "(moz_places.title not LIKE '%" . substr($value, 1) . "%')");
-					}else{
-						array_push($whereTitle, "(moz_places.title LIKE '%" . $value . "%')");
-					}	
-				//Else push to whereOR array
-				}else{
-					//Exclude term if preceded by "-"
-					if(stringBeginsWith($value,"-")){
-						array_push($whereORTitle, "(moz_places.title not	LIKE '%" . substr($value, 1) . "%')");
-					}else{
-						array_push($whereORTitle, "(moz_places.title 	LIKE '%" . $value . "%')");
-					}	
-					$temp = 0;
-				}		
+		function regex($string, $pattern) {
+			if(preg_match($pattern, $string)){
+			return 1;
 			}
-			$whereTitle = " (" . implode(' and ', $whereTitle) . ") ";
-			$whereORTitle = " (" . implode(' or ', $whereORTitle) . ") ";
-			$tempArray[0] = $whereTitle; $tempArray[1] = $whereORTitle;
-			$whereTitle = " (" . my_join($tempArray, " and ") . ") ";
+			return 0;
 		}
+		$db->sqliteCreateFunction('regex', 'regex', 2);
 		
-		
-		$temp = 0;
-		if($isUrl=="1"){
-			foreach($searchArray as $value) {
-				if($value == "OR"){
-					$temp = 1;continue;
-				}
-				//If term isn't preceded by OR, push to where array.
-				if($temp == 0){
-					//Exclude term if preceded by "-"
-					if(stringBeginsWith($value,"-")){
-						array_push($whereURL, "(moz_places.url not	LIKE '%" . substr($value, 1) . "%')");
-					}else{
-						array_push($whereURL, "(moz_places.url 	LIKE '%" . $value . "%')");
-					}	
-				//Else push to whereOR array
-				}else{
-					//Exclude term if preceded by "-"
-					if(stringBeginsWith($value,"-")){
-						array_push($whereORURL, "(moz_places.url not	LIKE '%" . substr($value, 1) . "%')");
-					}else{
-						array_push($whereORURL, "(moz_places.url 	LIKE '%" . $value . "%')");
-					}	
-					$temp = 0;
-				}		
-			}
-			$whereURL = " (" . implode(' and ', $whereURL) . ") ";
-			$whereORURL = " (" . implode(' or ', $whereORURL) . ") ";
-			$tempArray[0] = $whereURL; $tempArray[1] = $whereORURL;
-			$whereURL = " (" . my_join($tempArray, " and ") . ") ";
-		}
-		//$whereURL = getSyntaxedWhere("moz_places.url");
-		
-		$tempArray[0] = $whereURL;
-		$tempArray[1] = $whereTitle;
+
+		$tempArray[0] = getSyntaxedWhere("moz_places.url", $searchArray);
+		$tempArray[1] = getSyntaxedWhere("moz_places.title", $searchArray);
 		$whereAll = my_join($tempArray, " or ");
 		
-		
+		///////////////////
+		//Firefox Query////
+		//////////////////
 		$row = $db->prepare("
 			SELECT distinct 
 				moz_places.id id,
@@ -269,8 +188,9 @@ include("functions.php");
 				datetime(moz_places.last_visit_date/1000000,'unixepoch') lastvisit
 			FROM moz_places 
 			left join moz_favicons on moz_places.favicon_id = moz_favicons.id
-			WHERE moz_places.hidden like '" . $isHidden . 
-			"' and (" . $whereAll . ") GROUP BY moz_places.id " .
+			WHERE moz_places.hidden like '" . $isHidden . "'" .
+			" and REGEX($regexName, '$regexPattern') like '1' " .
+			" and (" . $whereAll . ") GROUP BY moz_places.id " .
 			"ORDER BY " . $orderBy ." DESC " . $limit );
 		$row->execute();
 		foreach($row as $r) {
@@ -281,11 +201,11 @@ include("functions.php");
 			$displayUrl = $r['url'];
 			$displayTitle = $r['title'];
 			foreach($searchArray as $bold){
-				if($value == "OR"){continue;}
+				if($bold == "OR"){continue;}
 				$displayUrl = str_ireplace($bold, ('<span class="found">' . $bold . '</span>'), $displayUrl);
 			}
 			foreach($searchArray as $bold){
-				if($value == "OR"){continue;}
+				if($bold == "OR"){continue;}
 				$displayTitle = str_ireplace($bold, ('<span class="found">' . $bold . '</span>'), $displayTitle);
 			}
 			
@@ -296,7 +216,6 @@ include("functions.php");
 				$url = $url . $displayTitle . "</a>";
 			}
 
-			
 
 			if($r['favicon']==""){
 				$favicon = '<img src="img/favicon.ico' . '" />';
@@ -333,22 +252,5 @@ include("functions.php");
 		  }
 		fclose($file); 
 	}
-
-
-	if (!function_exists('str_getcsv')) {
-		function str_getcsv($input, $delimiter = ',', $enclosure = '"', $escape = null, $eol = null) {
-			$temp = fopen("php://memory", "rw");
-			fwrite($temp, $input);
-			fseek($temp, 0);
-			$r = fgetcsv($temp, 4096, $delimiter, $enclosure);
-			fclose($temp);
-			return $r;
-		}
-	}
-
-	
-
-	
-	
 
 ?>

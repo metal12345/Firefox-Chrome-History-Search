@@ -15,6 +15,8 @@
 				// Get typed value
 				var searchString    = $("#search_box").val();
 				var limitString    = $("#limit_box").val();
+				var regexnameString = $("#regexname_box").val();
+				var regexpatternString = $("#regexpattern_box").val();
 				
 				if ($('#isTitle:checked').val() !== undefined) {
 					var isTitleString    = $("#isTitle").val();
@@ -40,7 +42,18 @@
 				$('#btn_get').val(orderBy);
 			
 				// Form queryString
-				var data            = 'search='+ searchString + '&isTitle=' + isTitleString + '&isUrl=' + isUrlString + '&isHidden=' + isHiddenString + '&chrome=' + chromeString + '&orderBy=' + orderBy + '&limit=' + limitString + '&isCSV=' + isCSVString;
+				var data        = 
+				'search='+ searchString + 
+				'&isTitle=' + isTitleString + 
+				'&isUrl=' + isUrlString + 
+				'&isHidden=' + isHiddenString + 
+				'&chrome=' + chromeString + 
+				'&orderBy=' + orderBy + 
+				'&limit=' + limitString + 
+				'&isCSV=' + isCSVString + 
+				'&regexName=' + regexnameString + 
+				'&regexPattern=' + encodeURIComponent(regexpatternString) ;
+				
 				// If searchString isn't empty
 				if(searchString) {
 					$.ajax({
@@ -64,6 +77,66 @@
 			});
 		});
 		</script>
+		<script type="text/javascript">
+		$(function() {
+			$(".stat_button").click(function() {
+						$(".advanced").hide();
+
+				
+				$.ajax({
+					type: "POST",
+					url: "stat/index.php",
+					beforeSend: function(html) { // happens before the call
+						$("#results").html('');
+						$("#searchresults").show();
+						$(".word").html(searchString);
+						$('.container').append('<div class="wait"><img id="loadingIndicator" src="img/loader.gif" alt="Loading..." /></div>');
+				   },
+				   success: function(html){ // happens after getting results
+						$("#results").show();
+						$("#results").append(html);
+						$('.wait').remove();
+				  }
+				});
+				return false;
+			});
+		});
+		</script>
+		
+		
+		<script type="text/javascript">	
+		function getStats(){
+		
+			//Toggle Visibility///////////////////////
+			if($('#stats').html() == ""){
+			}
+			else{
+				$('#stats').toggle();
+			}
+			////////////////////////////////////////
+
+
+
+			if (window.XMLHttpRequest){//IE7+, Firefox, Chrome, Opera, Safari
+			  xmlhttp=new XMLHttpRequest();
+			  document.getElementById('stats').innerHTML='<div class="wait"><img id="loadingIndicator" src="img/infoloader.gif" alt="Loading..." /></div>';
+			}
+			else{// IE6, IE5
+			  xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+			  document.getElementById('stats').innerHTML='<div class="wait"><img id="loadingIndicator" src="img/infoloader.gif" alt="Loading..." /></div>';
+			}
+			xmlhttp.onreadystatechange=function(){
+			  if (xmlhttp.readyState==4 && xmlhttp.status==200){
+				document.getElementById('stats').innerHTML=xmlhttp.responseText;
+				
+				}
+			}
+			xmlhttp.open("GET","stat/postStat.php?",true);
+			xmlhttp.send();
+			
+		}
+		</script>  	
+		
 		<script type="text/javascript">	
 		function showInfo(str){	
 			//Toggle Visibility///////////////////////
@@ -99,8 +172,6 @@
 			}
 			xmlhttp.open("GET","inc/more_info.php?q="+str+'&chrome='+chromeString,true);
 			xmlhttp.send();
-	
-			
 		}
 		</script>  
 		<script>
@@ -127,14 +198,15 @@
 		
 	</head>
 	<body>
-		<div class="container">
+		<div class="container" id="container">
 			<div style="margin:20px auto; text-align: center; ">
+					
 				<form method="post" action="inc/post.php">
 					Chrome
 					<input type="checkbox" name="chrome" id="chrome" value="0" class='chrome' /> <br />
 					<input type="text" name="search" id="search_box" value="" class='search_box'/>
 					<input type="submit" value="Go" class="search_button" /><br />
-					<a href="#" class="show_advanced">Advanced Search</a> / <a href="stat/index.php" class="">Statistics</a> / <a href="mergeit.php" class="">Merge FF Histories</a> / <a href="#" class="show_syntax">Syntax</a><br />
+					<a href="#" class="show_advanced">Advanced Search</a> / <a href="#" class="" onclick="getStats('')">Statistics</a> / <a href="#" class="show_syntax">Syntax</a> / <a href="mergeit.php" class="">Merge FF Histories</a><br />
 					 
 					<div class="syntax">
 						Use a "%" sign to indicate wildcard. <br />
@@ -170,13 +242,27 @@
 						</div>
 						<div class="limitIt">
 							Result Limit<br />
-							<input type="text" name="limit" id="limit_box" value="2000" class='limit_box'/>
+							<input type="text" name="limit" id="limit_box" value="2000" class=''/><br />
+							Regex<br />
+							<select type="text" name="regexname_box" id="regexname_box" class=''>
+								<option value="title">Title</option>
+								<option value="url">URL (Chrome)</option>
+								<option value="moz_places.url">URL (Firefox)</option>
+								<option value="visit_count">Visit Count</option>
+								<option value="lastvisit">Last Visit</option>
+								<option value="typed">Typed</option>
+								<option value="frecency">Priority (Firefox)</option>
+
+							</select>
+							<input type="text" name="regexpattern_box" id="regexpattern_box" value="/^^/" class=''/>
+	
 							<br><input type="checkbox" name="isCSV" id="isCSV" value="1" class='' />Export CSV
 						</div>
 					</div>
 
 				</form>
 			</div>
+			<div id="stats" class="stats" style="margin:20px auto; text-align: center; "></div>
 			<div>
 				<div id="searchresults">Search results for <span class="word"></span></div>  
 				<ul id="results" class="update"></ul>
